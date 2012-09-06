@@ -1,0 +1,36 @@
+{% extends 'form_builder/base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style type="text/css">
+    fieldset { display: none; }
+</style>
+
+<ul class="tabs">
+    {% for tab in form_model.enabled_tab_set %}
+    <li>{{ tab.name }}</li>
+    {% endfor %}
+</ul>
+
+<form method="post" action="">
+    {% csrf_token %}
+    {% crispy form %}
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.tabs li').click(function() {
+            var name = $(this).html();
+
+            $('fieldset legend').each(function() {
+                if ($.trim($(this).html()) == name) {
+                    $('fieldset').hide();
+                    $(this).parent().show();
+                }
+            });
+        });
+        $('.tabs li:first').click();
+    });
+</script>
+{% endblock %}

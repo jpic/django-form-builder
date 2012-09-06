@@ -1,0 +1,35 @@
+test username
+test username
+test first_name
+test first_name
+test last_name
+test last_name
+test email
+test email
+test password
+test password
+test is_staff
+test is_active
+test is_superuser
+test last_login
+test date_joined
+[
+    {
+        "pk": 1,
+        "model": "auth.user",
+        "fields": {
+            "username": "test",
+            "first_name": "",
+            "last_name": "",
+            "is_active": true,
+            "is_superuser": true,
+            "is_staff": true,
+            "last_login": "2012-09-06T09:25:58.133Z",
+            "groups": [],
+            "user_permissions": [],
+            "password": "pbkdf2_sha256$10000$MX19cP8VxWEN$cpmCFgRUqeKxC7alsb3jIr6eeZVmelnJuMvEoxF5JBQ=",
+            "email": "t@tt.tt",
+            "date_joined": "2012-09-06T09:25:58.133Z"
+        }
+    }
+]

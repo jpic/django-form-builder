@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {% trans 'Form builder test project' %}{% endblock %}
+
+{% block branding %}
+{% trans 'Form builder test project' %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+{% include 'autocomplete_light/static.html' %}
+<style type="text/css">
+    .multiple input {
+        margin-left: 0;
+    }
+    .multiple .deck [data-value] {
+        padding-left: 0;
+    }
+</style>
+{% endblock %}
