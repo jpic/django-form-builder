@@ -20,7 +20,7 @@
 </ul>
 
 {% for tab in tabs %}
-<div class="fieldset" id="tab-{{ tab.pk }}" data-pk="{{ tab.pk }}">
+<div class="fieldset" id="tab-{{ tab.pk }}" data-pk="{{ tab.pk }}" data-tab-name="{{ tab.name }}">
     {% for field in tab.field_set.all %}
     <div class="field {{ field.kind }}" id="field-{{ field.model_field_name }}"
         data-model-field-name="{{ field.model_field_name }}" data-pk="{{ field.pk }}">

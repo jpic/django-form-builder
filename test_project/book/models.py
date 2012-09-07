@@ -11,7 +11,6 @@ class Author(models.Model):
         ordering = ('name',)
 
 
-
 class Book(models.Model):
     name = models.CharField(max_length=100)
     publisher = models.ForeignKey('Publisher')

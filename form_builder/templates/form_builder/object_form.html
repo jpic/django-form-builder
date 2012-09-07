@@ -1,36 +1,130 @@
 {% extends 'form_builder/base.html' %}
 
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags form_builder_tags i18n %}
 
 {% block content %}
 <style type="text/css">
-    fieldset { display: none; }
+    .hidden, fieldset, .fancy-formsets-table label { display: none; }
+    table.fancy-formsets-table input, table.fancy-formsets-table textarea, table.fancy-formsets-table select, table.fancy-formsets-table .uneditable-input, table.fancy-formsets-table .help-inline {
+    margin-bottom: 0px;
+}
 </style>
 
 <ul class="tabs">
     {% for tab in form_model.enabled_tab_set %}
-    <li>{{ tab.name }}</li>
+    <li data-tab-name="{{ tab.name }}">{{ tab.name|capfirst }}</li>
+    {% endfor %}
+    {% for inline in inlines %}
+    <li data-tab-name="{{ inline.name }}">{{ inline.name|capfirst }}</li>
     {% endfor %}
 </ul>
 
 <form method="post" action="">
     {% csrf_token %}
     {% crispy form %}
+
+    {% for inline in inlines %}
+    {{ inline.management_form }}
+
+    <table class="table table-striped table-condensed fancy-formsets-table" data-tab-name="{{ inline.name }}">
+        <thead>
+            <tr>
+                {% for name in inline.forms.0.fields.keys %}
+                <th>
+                    {% if not inline.forms.0|is_hidden:name %}
+                        {% trans name|lower|capfirst %}
+                    {% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for form in inline.forms %}
+            <tr class="{% if not form.instance.pk %}hidden extra{% endif %}">
+                {% for name in form.fields.keys %}
+                <td class="clearfix control-group">
+                    {% if name == 'DELETE' %}
+                        <span class="fancy-formsets-delete">
+
+                            <span style="display: none">
+                                {{ form|get:name }}
+                            </span>
+                            <a href="#" class="btn btn-danger">
+                                {% trans 'Delete' %}
+                            </a>
+                        </span>
+                    {% else %}
+                        {{ form|get:name|as_crispy_field }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="{{ inline.forms.0.fields|length }}">
+                    <a href="#" class="btn fancy-formsets-add-row">
+                        {% trans 'Add book' %}
+                    </a>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    {% endfor %}
+
+    <input type="submit" value="{% trans 'Save' %}" class="btn" />
 </form>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        $('.tabs li').click(function() {
-            var name = $(this).html();
+        $('fieldset').each(function() {
+            $(this).attr('data-tab-name', $(this).find('legend').html());
+        });
 
-            $('fieldset legend').each(function() {
-                if ($.trim($(this).html()) == name) {
-                    $('fieldset').hide();
-                    $(this).parent().show();
+        $('tr.hidden').each(function() {
+            var show = false;
+
+            $(this).find('select, input:not([type=hidden]):not([type=checkbox])').each(function() {
+                if ($(this).val()) {
+                    console.log($(this))
+                    show = true;
                 }
             });
+            
+            if (show) {
+                $(this).removeClass('hidden');
+            }
         });
+
+        $('.tabs li').click(function() {
+            $('fieldset').hide();
+            $('table').hide();
+            $('[data-tab-name="' + $(this).data('tab-name') + '"]').show();
+        });
+
         $('.tabs li:first').click();
+
+        $('a.fancy-formsets-add-row').click(function() {
+            var tr = $(this).parents('table').find('tr.extra:first');
+            if (tr.length) {
+                tr.removeClass("hidden").removeClass("extra");
+                tr.find("span.fancy-formsets-delete input")
+                .prop('checked', false);
+                tr.trigger("fancy-formsets-row-added");
+            } else {
+                $(this).next("span.fancy-formsets-no-more-rows")
+                    .removeClass("hidden");
+            }       
+            return false;
+        });
+        
+        $('span.fancy-formsets-delete a').click(function() {
+            $(this).parents("span.fancy-formsets-delete").find("input")
+                .prop('checked', true);
+            $(this).parents("tr").addClass("hidden");
+            return false;
+        });
     });
 </script>
 {% endblock %}

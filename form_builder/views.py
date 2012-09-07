@@ -4,6 +4,8 @@ from django import shortcuts
 from django.core import urlresolvers
 from django.views import generic
 from django import http
+from django.forms.models import inlineformset_factory
+from django.db.models.fields.related import ForeignRelatedObjectsDescriptor
 
 from autocomplete_light import modelform_factory
 from crispy_forms.helper import FormHelper
@@ -48,14 +50,26 @@ class ObjectCreateView(generic.TemplateView):
     form_kwargs = {}
 
     @property
+    def model_class(self):
+        model_class = getattr(self, '_model_class', None)
+        if model_class is None:
+            self._model_class = self.form_model.contenttype.model_class()
+        return self._model_class
+
+    @property
     def form_model(self):
-        return shortcuts.get_object_or_404(Form, pk=self.kwargs['form_pk'])
+        form_model = getattr(self, '_form_model', None)
+        if form_model is None:
+            self._form_model = shortcuts.get_object_or_404(Form,
+                pk=self.kwargs['form_pk'])
+        return self._form_model
 
     @property
     def form_class(self):
         form = modelform_factory(self.form_model.contenttype.model_class())
         form.helper = FormHelper()
         form.helper.layout = self.form_model.to_crispy()
+        form.helper.form_tag = False
         return form
 
     @property
@@ -72,18 +86,53 @@ class ObjectCreateView(generic.TemplateView):
             return (self.request.POST, self.request.FILES)
         return []
 
+    @property
+    def inline_instances(self):
+        inline_instances = []
+
+        for name, value in self.model_class.__dict__.items():
+            if not isinstance(value, ForeignRelatedObjectsDescriptor):
+                continue
+
+            model = getattr(self.model_class, name).related.model
+
+            cls = inlineformset_factory(self.model_class, model,
+                form=modelform_factory(model), extra=25)
+
+            instance = cls(prefix=name, *self.inline_args,
+                **self.inline_kwargs)
+            instance.name = instance.model._meta.verbose_name_plural
+            inline_instances.append(instance)
+
+        return inline_instances
+
+    @property
+    def inline_kwargs(self):
+        return {'instance': self.form_instance.instance}
+
+    @property
+    def inline_args(self):
+        return self.form_args
+
     def get_context_data(self, *args, **kwargs):
         context = super(ObjectCreateView, self).get_context_data(*args,
                 **kwargs)
 
         context['form'] = self.form_instance
         context['form_model'] = self.form_model
+        context['inlines'] = self.inline_instances
 
         return context
 
     def post(self, request, *args, **kwargs):
-        if self.form_instance.is_valid():
+        valid = self.form_instance.is_valid()
+        for inline in self.inline_instances:
+            if not inline.is_valid():
+                valid = False
+
+        if valid:
             obj = self.form_instance.save()
+            [inline.save() for inline in self.inline_instances]
             return http.HttpResponseRedirect(urlresolvers.reverse(
                 'form_builder_object_update', args=(obj.pk,
                     self.kwargs.get('form_pk'))))

@@ -10,6 +10,7 @@
 {% block nav-global %}{% endblock %}
 
 {% block extrahead %}
+{{ block.super }}
 {% include 'autocomplete_light/static.html' %}
 <style type="text/css">
     .multiple input {

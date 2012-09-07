@@ -17,11 +17,6 @@ class Form(models.Model):
         for tab in self.tab_set.filter(enabled=enabled):
             layout.fields.append(tab.to_crispy())
 
-        layout.fields.append(
-            ButtonHolder(
-                Submit('submit', 'Submit', css_class='button white')
-            )
-        )
         return layout
 
     def enabled_tab_set(self):

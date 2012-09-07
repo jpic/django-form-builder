@@ -1,11 +1,11 @@
 {% extends 'admin/base_site.html' %}
 
 {% block extrahead %}
-{{ block.supre }}
 <script src="{{ STATIC_URL }}jquery.js" type="text/javascript"></script>
 <script src="{{ STATIC_URL }}form_builder/script.js" type="text/javascript">
 </script>
 <script src="{{ STATIC_URL }}form_builder/jquery-ui.js" type="text/javascript">
 </script>
 <link type="text/css" href="{{ STATIC_URL }}form_builder/jquery-ui/development-bundle/themes/ui-lightness/jquery.ui.all.css" rel="Stylesheet" />
+{{ block.super }}
 {% endblock %}
