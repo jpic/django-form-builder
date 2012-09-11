@@ -19,11 +19,17 @@ class Form(models.Model):
 
         return layout
 
+    @property
     def enabled_tab_set(self):
         return self.tab_set.filter(enabled=True)
 
+    @property
     def disabled_tab_set(self):
         return self.tab_set.filter(enabled=False)
+
+    @property
+    def enabled_field_set(self):
+        return Field.objects.filter(tab__in=self.enabled_tab_set)
 
     def update_from_dict(self, data):
         order = 0
