@@ -1,0 +1,6 @@
+.enabled-form.outer, .disabled-form.outer { display: inline-block; width: 49%; }
+.inner, .outer { vertical-align: top; }
+.field * { display: inline-block; }
+.tab-list li a span { display: inline-block; }
+.handle { vertical-align: bottom; }
+.field { width: 120px; }
