@@ -7,7 +7,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
 
 class Form(models.Model):
     name = models.CharField(max_length=100)
-    contenttype = models.ForeignKey('contenttypes.ContentType')
+    contenttype = models.ForeignKey('contenttypes.ContentType', related_name='form_builder_form_set')
 
     def __unicode__(self):
         return u'%s / %s' % (self.contenttype.model, self.name)
