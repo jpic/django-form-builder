@@ -1,5 +1,6 @@
 import unittest
 
+from django.test.client import Client
 from django.contrib.contenttypes.models import ContentType
 
 from book.models import Book
@@ -7,28 +8,110 @@ from ..models import Form, Tab, Field
 
 
 class FormUpdateTest(unittest.TestCase):
-    def test_001_name_to_info(self):
-        form = Form(name='My Form',
-            contenttype=ContentType.objects.get_for_model(Book))
-        form.save()
+    def test_001_create(self):
+        client = Client()
+        response = client.get('/forms/form/create/')
+        self.failUnlessEqual(response.status_code, 200)
 
-        name = Field.objects.get(tab__form=form, name='name')
+        response = client.post('/forms/form/create/', {
+            'contenttype': ContentType.objects.get_for_model(Book).pk,
+            'name': 'test form'})
+        self.failUnlessEqual(response.status_code, 302)
+        self.failUnlessEqual(response['Location'],
+            'http://testserver/forms/form/1/update/')
 
-        data = [
-            {
-                'fields': [
-                    {
-                        'help_text': '',
-                        'model_field_name': 'name',
-                        'name': 'name',
-                        'id': name.pk,
-                    },
-                ],
-                'name': 'Info',
-            }
-        ]
+    def test_002_update(self):
+        client = Client()
+        response = client.get('/forms/form/1/update/')
+        self.failUnlessEqual(response.status_code, 200)
 
-        form.update_from_dict(data)
+        fixture = """
+[{
+    "name": "a",
+    "fields": [{
+        "verbose_name": "authors",
+        "help_text": "",
+        "id": 4,
+        "name": "authors",
+        "kind": ""
+    }, {
+        "verbose_name": "aoeu",
+        "help_text": "",
+        "name": "aoeu",
+        "kind": "django.db.models.fields.FloatField"
+    }]
+}, {
+    "name": "e",
+    "fields": [{
+        "verbose_name": "name",
+        "help_text": "",
+        "id": 2,
+        "name": "name",
+        "kind": ""
+    }, {
+        "verbose_name": "publisher",
+        "help_text": "",
+        "id": 3,
+        "name": "publisher",
+        "kind": ""
+    }]
+}]
+"""
+
+        # check against a regression which caused fields to duplicate
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+
+        self.failUnlessEqual(Form.objects.count(), 1)
+        self.failUnlessEqual(Tab.objects.count(), 3)
+        self.failUnlessEqual(Field.objects.count(), 5)
+        self.failUnlessEqual(Field.objects.filter(tab__enabled=True).count(),
+            4)
+
+    def test_003_remove_field(self):
+        fixture = """
+[{
+    "name": "a",
+    "fields": [{
+        "verbose_name": "authors",
+        "help_text": "",
+        "id": 4,
+        "name": "authors",
+        "kind": ""
+    }, {
+        "verbose_name": "aoeu",
+        "help_text": "",
+        "name": "aoeu",
+        "kind": "django.db.models.fields.FloatField"
+    }]
+}, {
+    "name": "e",
+    "fields": [{
+        "verbose_name": "name",
+        "help_text": "",
+        "id": 2,
+        "name": "name",
+        "kind": ""
+    }]
+}]
+"""
+
+        client = Client()
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+
+        self.failUnlessEqual(Form.objects.count(), 1)
+        self.failUnlessEqual(Tab.objects.count(), 3)
+        self.failUnlessEqual(Field.objects.count(), 5)
+        self.failUnlessEqual(Field.objects.filter(tab__enabled=True).count(),
+            3)
 
 
-        self.assertEqual()

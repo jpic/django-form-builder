@@ -66,9 +66,20 @@ class ObjectCreateView(generic.TemplateView):
 
     @property
     def form_class(self):
+        attributes = self.form_model.enabled_field_set
+
         form = modelform_factory(self.form_model.contenttype.model_class(),
-            fields=self.form_model.enabled_field_set.values_list(
-                'model_field_name', flat=True))
+            fields=[a.name for a in attributes])
+
+        for attribute in attributes:
+            name = attribute.name
+
+            if attribute.verbose_name:
+                form.base_fields[name].label = attribute.verbose_name
+
+            if attribute.help_text:
+                form.base_fields[name].help_text = attribute.help_text
+
         form.helper = FormHelper()
         form.helper.layout = self.form_model.to_crispy()
         form.helper.form_tag = False
