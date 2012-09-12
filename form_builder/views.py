@@ -69,13 +69,13 @@ class ObjectCreateView(generic.TemplateView):
         attributes = self.form_model.enabled_field_set
 
         form = modelform_factory(self.form_model.contenttype.model_class(),
-            fields=[a.model_field_name for a in attributes])
+            fields=[a.name for a in attributes])
 
         for attribute in attributes:
-            name = attribute.model_field_name
+            name = attribute.name
 
-            if attribute.name:
-                form.base_fields[name].label = attribute.name
+            if attribute.verbose_name:
+                form.base_fields[name].label = attribute.verbose_name
 
             if attribute.help_text:
                 form.base_fields[name].help_text = attribute.help_text

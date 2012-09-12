@@ -34,12 +34,8 @@ class Form(models.Model):
     def update_from_dict(self, data):
         order = 0
         for tab_data in data:
-            if tab_data.get(u'id', None):
-                tab = Tab.objects.get(pk=tab_data[u'id'])
-                tab.name = tab_data[u'name']
-            else:
-                tab = Tab(name=tab_data[u'name'], form=self)
-            tab.enabled = True
+            tab, c = Tab.objects.get_or_create(name=tab_data[u'name'],
+                form=self, enabled=True)
             tab.order = order
             tab.save()
             order += 1
@@ -57,11 +53,11 @@ def prepare_form(sender, instance, created, **kwargs):
 
     for field in model_class._meta.fields + model_class._meta.many_to_many:
         try:
-            f = Field.objects.get(model_field_name=field.name,
+            f = Field.objects.get(name=field.name,
                 tab__form=instance)
         except Field.DoesNotExist:
-            f = Field(model_field_name=field.name, tab=default_tab,
-                    name=getattr(field, 'verbose_name', _(field.name)))
+            f = Field(name=field.name, tab=default_tab,
+                    verbose_name=getattr(field, 'verbose_name', _(field.name)))
             f.save()
 
     if not instance.tab_set.filter(enabled=True).count():
@@ -97,13 +93,13 @@ class Tab(models.Model):
     def update_from_dict(self, data):
         order = 0
         for field_data in data[u'fields']:
-            if field_data.get(u'id', None):
-                field = Field.objects.get(pk=field_data[u'id'])
-            else:
-                field = Field(tab=self,
-                    model_field_name=field_data[u'model_field_name'])
+            try:
+                field = Field.objects.get(tab__form=self.form,
+                    name=field_data[u'name'])
+            except Field.DoesNotExist:
+                field = Field(tab=self, name=field_data[u'name'])
             field.tab = self
-            field.name = field_data[u'name']
+            field.verbose_name = field_data[u'verbose_name']
             field.kind = field_data[u'kind']
             field.help_text = field_data[u'help_text']
             field.order = order
@@ -113,7 +109,7 @@ class Tab(models.Model):
 
 class Field(models.Model):
     name = models.CharField(max_length=100)
-    model_field_name = models.CharField(max_length=100)
+    verbose_name = models.CharField(max_length=100)
     help_text = models.TextField(blank=True)
     tab = models.ForeignKey('Tab')
     kind = models.CharField(max_length=12, choices=KIND_CHOICES)
@@ -126,19 +122,19 @@ class Field(models.Model):
         return u'%s / %s' % (self.name, self.tab)
 
     def to_crispy(self):
-        return self.model_field_name
+        return self.name
 
 
 def create_field_attribute(sender, instance, **kwargs):
     try:
         instance.tab.form.contenttype.model_class()._meta.get_field_by_name(
-            instance.model_field_name)
+            instance.name)
         return
     except models.FieldDoesNotExist:
         pass
 
     kwargs = dict(content_type=instance.tab.form.contenttype,
-        name=instance.model_field_name)
+        name=instance.name)
 
     try:
         attribute = Attribute.objects.get(**kwargs)
@@ -146,7 +142,7 @@ def create_field_attribute(sender, instance, **kwargs):
         attribute = Attribute(**kwargs)
 
     attribute.kind = instance.kind
-    attribute.verbose_name = instance.name
+    attribute.verbose_name = instance.verbose_name
     attribute.help_text = instance.help_text
     attribute.save()
 models.signals.post_save.connect(create_field_attribute, sender=Field)

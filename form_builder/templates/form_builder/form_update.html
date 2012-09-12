@@ -83,8 +83,8 @@ $(document).ready(function() {
                                 bValid = bValid && checkLength( field_code, "code", 4, 80 );
 
                                 if ( bValid ) {
-                                    ui.item.find('.name').html(field_label.val()).attr('contenteditable', true).show();
-                                    ui.item.data('model-field-name', field_code.val());
+                                    ui.item.find('.verbose-name').html(field_label.val()).attr('contenteditable', true).show();
+                                    ui.item.data('name', field_code.val());
                                     ui.item.find('.help-text').show();
                                     ui.item.find('.help-icon').show();
                                     $( this ).dialog( "close" );
@@ -163,10 +163,10 @@ $(document).ready(function() {
 
             fieldset.find('.field').each(function() {
                 var field = {
-                    name: $.trim($(this).find('.name').html()),
+                    verbose_name: $.trim($(this).find('.verbose-name').html()),
                     help_text: $.trim($(this).find('.help-text').html()),
                     id: $(this).data('pk'),
-                    model_field_name: $.trim($(this).data('model-field-name')),
+                    name: $.trim($(this).data('name')),
                 };
 
                 var kind = $(this).find('.kind');
