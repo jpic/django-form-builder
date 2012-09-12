@@ -208,9 +208,12 @@ $(document).ready(function() {
 </script>
 
 <div class="form-info">
-    {{ object }}
-    <button class="save-form">{% trans 'Save form' %}</button>
-    <a href="{% url form_builder_object_create object.pk %}" class="test-form">{% trans 'Try form' %}</a>
+    <h1>{% trans 'Edit form' %}: {{ object }}</h1>
+    <a target="_blank" href="{% url form_builder_object_create object.pk %}" class="test-form">{% trans 'Try form' %}</a>
+</div>
+
+<div class="submit-row">
+    <button class="btn save-form">{% trans 'Save form' %}</button>
 </div>
 
 <div class="enabled-form outer">
