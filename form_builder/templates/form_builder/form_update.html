@@ -149,6 +149,21 @@ $(document).ready(function() {
     });
 
     $('.save-form').click(function() {
+        var seen = [];
+        var duplicate = false;
+        $('.enabled-form .tab-list li').each(function() {
+            var name = $(this).find('.name').html();
+            if (seen.indexOf(name) >= 0) {
+                duplicate = name;
+            }
+            seen.push(name);
+        });
+
+        if (duplicate != false) {
+            alert("{% trans 'Each tab must have a unique name. Please rename one of the tabs called:' %} '"+ duplicate +"'");
+            return;
+        }
+
         var formData = [];
         var form = $('.enabled-form .inner');
 
@@ -185,7 +200,6 @@ $(document).ready(function() {
             formData.push(tab);
         });
 
-        console.log(formData)
         $.post(document.location.href, {form: JSON.stringify(formData)});
     });
 
