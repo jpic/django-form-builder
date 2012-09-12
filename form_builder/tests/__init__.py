@@ -69,3 +69,49 @@ class FormUpdateTest(unittest.TestCase):
         self.failUnlessEqual(Form.objects.count(), 1)
         self.failUnlessEqual(Tab.objects.count(), 3)
         self.failUnlessEqual(Field.objects.count(), 5)
+        self.failUnlessEqual(Field.objects.filter(tab__enabled=True).count(),
+            4)
+
+    def test_003_remove_field(self):
+        fixture = """
+[{
+    "name": "a",
+    "fields": [{
+        "verbose_name": "authors",
+        "help_text": "",
+        "id": 4,
+        "name": "authors",
+        "kind": ""
+    }, {
+        "verbose_name": "aoeu",
+        "help_text": "",
+        "name": "aoeu",
+        "kind": "django.db.models.fields.FloatField"
+    }]
+}, {
+    "name": "e",
+    "fields": [{
+        "verbose_name": "name",
+        "help_text": "",
+        "id": 2,
+        "name": "name",
+        "kind": ""
+    }]
+}]
+"""
+
+        client = Client()
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+        response = client.post('/forms/form/1/update/', {
+            'form': fixture})
+
+        self.failUnlessEqual(Form.objects.count(), 1)
+        self.failUnlessEqual(Tab.objects.count(), 3)
+        self.failUnlessEqual(Field.objects.count(), 5)
+        self.failUnlessEqual(Field.objects.filter(tab__enabled=True).count(),
+            3)
+
+

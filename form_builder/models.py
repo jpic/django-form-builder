@@ -92,6 +92,7 @@ class Tab(models.Model):
 
     def update_from_dict(self, data):
         order = 0
+
         for field_data in data[u'fields']:
             try:
                 field = Field.objects.get(tab__form=self.form,
@@ -105,6 +106,9 @@ class Tab(models.Model):
             field.order = order
             field.save()
             order += 1
+
+        self.field_set.exclude(name__in=[f[u'name'] for f in data[u'fields']]
+            ).update(tab=self.form.disabled_tab_set[0])
 
 
 class Field(models.Model):
